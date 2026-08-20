@@ -24,10 +24,11 @@
   <!-- Checkered ribbon along the top edge -->
   <rect x="0" y="0" width="1200" height="14" fill="url(#checker)" opacity="0.5"/>
 
-  <!-- Racing line sweeping across the lower half -->
-  <path d="M -20 300 C 260 300, 340 208, 620 218 S 1050 268, 1230 190"
+  <!-- Racing line sweeping across the lower band, kept clear of the text
+       above it (subline baseline sits at y258) so it never strikes through. -->
+  <path d="M -20 318 C 240 318, 360 298, 620 304 S 1040 322, 1230 296"
         fill="none" stroke="url(#rule)" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
-  <path d="M -20 312 C 260 312, 344 222, 624 232 S 1046 280, 1226 204"
+  <path d="M -20 328 C 240 328, 364 309, 624 314 S 1036 332, 1226 306"
         fill="none" stroke="#d7d2cb" stroke-width="1.5" stroke-dasharray="10 12" opacity="0.35"/>
 
   <!-- Title block -->
