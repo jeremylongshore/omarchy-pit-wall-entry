@@ -112,10 +112,10 @@ Panel {
   }
 
   readonly property string tooltip: {
-    if (!scheduleLoaded) return "Pit Wall — loading F1 schedule…"
-    if (raceState.status === "off") return "Pit Wall — season complete"
+    if (!scheduleLoaded) return "Pit Wall · loading F1 schedule…"
+    if (raceState.status === "off") return "Pit Wall · season complete"
     var r = raceState.race
-    return r.name + " — " + raceState.session.label
+    return r.name + " · " + raceState.session.label
       + (isLive ? " · LIVE" : " · " + Qt.formatDateTime(new Date(raceState.session.startMs), "ddd d MMM · HH:mm"))
   }
 
