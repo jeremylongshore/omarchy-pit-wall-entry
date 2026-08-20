@@ -63,8 +63,12 @@ Panel {
   property string liveSessionKey: ""
   property string liveFetchedFullAt: ""
 
+  // Debug-only clock shift (ms) so a test rig can rehearse live mode outside
+  // a real session window. Stays 0 in normal use; not surfaced in settings.
+  readonly property double debugTimeOffsetMs: Number(setting("debugTimeOffsetMs", 0)) || 0
+
   // Re-evaluated every 30s so the countdown ticks without any fetch.
-  property double nowMs: Date.now()
+  property double nowMs: Date.now() + debugTimeOffsetMs
 
   readonly property var raceState: Model.currentOrNext(schedule.races, nowMs)
   readonly property bool isLive: raceState.status === "live"
@@ -103,7 +107,7 @@ Panel {
   //      openf1 on the fast timer: full position history once per session,
   //      then only the last three minutes of events, merged into state.
   function liveTick() {
-    nowMs = Date.now()
+    nowMs = Date.now() + debugTimeOffsetMs
     if (!isLive) return
     if (!liveDriversProc.running) liveDriversProc.running = true
     var since = ""
@@ -222,7 +226,7 @@ Panel {
     interval: 30000
     running: true
     repeat: true
-    onTriggered: root.nowMs = Date.now()
+    onTriggered: root.nowMs = Date.now() + root.debugTimeOffsetMs
   }
 
   IpcHandler {

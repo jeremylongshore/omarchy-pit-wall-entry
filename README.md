@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/banner.svg" alt="Pit Wall" width="100%"></p>
+
 # Pit Wall
 
 Your F1 pit wall in the Omarchy bar.

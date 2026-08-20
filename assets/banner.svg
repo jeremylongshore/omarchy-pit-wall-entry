@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="1200" height="340" role="img" aria-label="Pit Wall — Your F1 pit wall in the Omarchy bar.">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16090b"/>
+      <stop offset="1" stop-color="#0a0608"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.14" cy="0.1" r="0.6">
+      <stop offset="0" stop-color="#e10600" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#e10600" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rule" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff4d3d"/>
+      <stop offset="1" stop-color="#e10600"/>
+    </linearGradient>
+    <pattern id="checker" width="28" height="28" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" x="0" y="0" fill="#d7d2cb" fill-opacity="0.85"/>
+      <rect width="14" height="14" x="14" y="14" fill="#d7d2cb" fill-opacity="0.85"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="340" fill="url(#bg)"/>
+  <rect width="1200" height="340" fill="url(#glow)"/>
+
+  <!-- Checkered ribbon along the top edge -->
+  <rect x="0" y="0" width="1200" height="14" fill="url(#checker)" opacity="0.5"/>
+
+  <!-- Racing line sweeping across the lower half -->
+  <path d="M -20 300 C 260 300, 340 208, 620 218 S 1050 268, 1230 190"
+        fill="none" stroke="url(#rule)" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+  <path d="M -20 312 C 260 312, 344 222, 624 232 S 1046 280, 1226 204"
+        fill="none" stroke="#d7d2cb" stroke-width="1.5" stroke-dasharray="10 12" opacity="0.35"/>
+
+  <!-- Title block -->
+  <text x="72" y="150" font-family="'JetBrains Mono','Cascadia Mono',monospace" font-size="72" font-weight="700" letter-spacing="6" fill="#f3efe9">PIT WALL</text>
+  <rect x="76" y="176" width="330" height="4" fill="url(#rule)"/>
+  <text x="72" y="222" font-family="'JetBrains Mono','Cascadia Mono',monospace" font-size="24" letter-spacing="1" fill="#c8c2ba">Your F1 pit wall in the Omarchy bar.</text>
+  <text x="72" y="258" font-family="'JetBrains Mono','Cascadia Mono',monospace" font-size="16" letter-spacing="1" fill="#8d8781">countdown pill · live timing · schedule in local time · championship standings</text>
+
+  <!-- Bar pill mock, top right -->
+  <g transform="translate(866,58)">
+    <rect x="0" y="0" width="262" height="46" rx="8" fill="#100d12" stroke="#2c2830" stroke-width="1.5"/>
+    <text x="20" y="30" font-family="'JetBrains Mono','Cascadia Mono',monospace" font-size="20" fill="#ff4d3d">&#9873;</text>
+    <text x="48" y="31" font-family="'JetBrains Mono','Cascadia Mono',monospace" font-size="20" fill="#f3efe9">RACE &#9656; VER</text>
+    <circle cx="238" cy="23" r="5" fill="#ff4d3d">
+      <animate attributeName="opacity" values="1;0.25;1" dur="1.6s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <g transform="translate(866,116)">
+    <rect x="0" y="0" width="262" height="46" rx="8" fill="#100d12" stroke="#2c2830" stroke-width="1.5"/>
+    <text x="20" y="30" font-family="'JetBrains Mono','Cascadia Mono',monospace" font-size="20" fill="#c8c2ba">&#9873;</text>
+    <text x="48" y="31" font-family="'JetBrains Mono','Cascadia Mono',monospace" font-size="20" fill="#c8c2ba">QUALI 2h 14m</text>
+  </g>
+</svg>
