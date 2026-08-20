@@ -97,16 +97,18 @@ Panel {
     ? Model.boardRows(livePositions, liveGaps, liveDrivers, liveRowsCount) : []
   readonly property string trackTag: isLive ? Model.statusTag(trackStatus) : ""
 
-  // Bar pill. Never silently vanishes: the checkered flag glyph is always
-  // present so an unreachable API reads as "loading", not "widget gone".
-  //   loading (no schedule yet) : "󰈻 …"
-  //   between sessions          : "󰈻 QUALI 2h 14m"
-  //   live                      : "󰈻 RACE ▸ VER"  /  "󰈻 RACE ▸ SC"
+  // Bar pill. Never silently vanishes: while loading it shows an ellipsis so
+  // an unreachable API reads as "loading", not "widget gone". Plain text by
+  // choice: the checkered-flag glyph the panel round removed was a Nerd
+  // Fonts codepoint that renders as tofu on an unpatched bar font.
+  //   loading (no schedule yet) : "…"
+  //   between sessions          : "QUALI 2h 14m"
+  //   live                      : "RACE ▸ VER"  /  "RACE ▸ SC"
   //   season over               : ""  (legitimately quiet; slot collapses)
   readonly property string label: {
-    if (!scheduleLoaded) return " …"
+    if (!scheduleLoaded) return "…"
     if (raceState.status === "off") return ""
-    return " " + Model.pillText(raceState, Model.leaderAcronym(liveRowsModel), trackTag)
+    return Model.pillText(raceState, Model.leaderAcronym(liveRowsModel), trackTag)
   }
 
   readonly property string tooltip: {
