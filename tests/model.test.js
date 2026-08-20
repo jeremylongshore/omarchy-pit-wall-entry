@@ -70,12 +70,50 @@ test("currentOrNext reports off after the season ends", () => {
   assert.equal(state.status, "off")
 })
 
-test("countdown keeps the two most significant units", () => {
+test("countdown keeps the two most significant units, zero-padded for stable width", () => {
   assert.equal(Model.countdown(2 * 86400000 + 4 * 3600000), "2d 4h")
   assert.equal(Model.countdown(2 * 3600000 + 14 * 60000), "2h 14m")
   assert.equal(Model.countdown(1 * 3600000 + 5 * 60000), "1h 05m")
   assert.equal(Model.countdown(14 * 60000), "14m")
+  // Sub-ten-minutes is zero-padded so the pill doesn't lose a character
+  // exactly when the countdown is most worth watching.
+  assert.equal(Model.countdown(9 * 60000), "09m")
+  assert.equal(Model.countdown(60000), "01m")
   assert.equal(Model.countdown(10000), "now")
+})
+
+test("clean strips angle brackets and control chars, caps length, defusing rich-text sinks", () => {
+  assert.equal(Model.clean("<img src=x onerror=1 width=90000>"), "img src=x onerror=1 width=90000")
+  assert.equal(Model.clean("Red Bull Racing"), "Red Bull Racing")   // spaces + normal text survive
+  assert.equal(Model.clean("VER\x01"), "VER")               // control chars gone
+  assert.equal(Model.clean(null), "")
+  assert.equal(Model.clean(undefined), "")
+  assert.equal(Model.clean("x".repeat(200), 32).length, 32)
+})
+
+test("parsers sanitize API strings so no tag reaches a Text element", () => {
+  const drivers = Model.parseDrivers(JSON.stringify([
+    { driver_number: 1, name_acronym: "<img src=http://evil>", team_name: "Team <b>X</b>" }
+  ]))
+  assert.equal(drivers["1"].acronym.indexOf("<"), -1)
+  assert.equal(drivers["1"].team.indexOf(">"), -1)
+
+  const standings = Model.parseStandings(JSON.stringify({
+    MRData: { StandingsTable: { StandingsLists: [{ DriverStandings: [
+      { position: "1", points: "<x>", Driver: { familyName: "<img>", code: "<a>" }, Constructors: [{ name: "<b>" }] }
+    ] }] } }
+  }), "DriverStandings")
+  assert.equal(standings[0].name.indexOf("<"), -1)
+  assert.equal(standings[0].points.indexOf("<"), -1)
+
+  const sched = Model.parseSchedule(JSON.stringify({
+    MRData: { RaceTable: { season: "2026", Races: [
+      { round: "1", raceName: "<img src=x>GP", date: "2026-03-01", time: "13:00:00Z",
+        Circuit: { circuitName: "<b>Track</b>" } }
+    ] } }
+  }))
+  assert.equal(sched.races[0].name.indexOf("<"), -1)
+  assert.equal(sched.races[0].circuit.indexOf(">"), -1)
 })
 
 test("pillText renders countdown and live variants", () => {

@@ -36,6 +36,19 @@ var SESSION_SHORT = {
   race: "RACE"
 }
 
+// Sanitize every string that comes from the APIs before it reaches a QML
+// Text. Two reasons: (1) a first-party bar label renders as Qt AutoText,
+// which promotes an HTML-looking string to StyledText — an `<img src=...>`
+// in a driver/team name would make the shell process fetch a URL, and an
+// oversized width= would blow out the bar; stripping angle brackets defuses
+// both. (2) A pathologically long field is a layout-cost problem, so cap it.
+function clean(value, max) {
+  var s = String(value === undefined || value === null ? "" : value)
+  s = s.replace(/[<>]/g, "").replace(/[\x00-\x1f\x7f]/g, "")
+  var cap = max || 64
+  return s.length > cap ? s.slice(0, cap) : s
+}
+
 function sessionStartMs(entry) {
   if (!entry || !entry.date) return NaN
   var time = entry.time || "00:00:00Z"
@@ -79,8 +92,8 @@ function parseSchedule(raw) {
     sessions.sort(function(a, b) { return a.startMs - b.startMs })
     races.push({
       round: parseInt(r.round, 10) || 0,
-      name: r.raceName || "",
-      circuit: r.Circuit ? (r.Circuit.circuitName || "") : "",
+      name: clean(r.raceName, 48),
+      circuit: clean(r.Circuit ? r.Circuit.circuitName : "", 48),
       locality: r.Circuit && r.Circuit.Location ? (r.Circuit.Location.locality || "") : "",
       country: r.Circuit && r.Circuit.Location ? (r.Circuit.Location.country || "") : "",
       sessions: sessions
@@ -123,7 +136,9 @@ function countdown(msUntil) {
   var minutes = totalMinutes % 60
   if (days > 0) return days + "d " + hours + "h"
   if (hours > 0) return hours + "h " + (minutes < 10 ? "0" : "") + minutes + "m"
-  return minutes + "m"
+  // Zero-pad the bare-minutes branch too, so the pill keeps a constant width
+  // as the countdown ticks under ten minutes (54m -> 09m, not 54m -> 9m).
+  return (minutes < 10 ? "0" : "") + minutes + "m"
 }
 
 // Bar pill text. Countdown mode: "QUALI 2h 14m". Live mode with a known
@@ -150,15 +165,15 @@ function parseStandings(raw, kind) {
     var row = rows[i]
     var entry = {
       pos: parseInt(row.position, 10) || (i + 1),
-      points: row.points || "0",
+      points: clean(row.points || "0", 6),
       wins: parseInt(row.wins, 10) || 0
     }
     if (row.Driver) {
-      entry.name = row.Driver.familyName || row.Driver.driverId || ""
-      entry.code = row.Driver.code || ""
-      entry.team = row.Constructors && row.Constructors[0] ? row.Constructors[0].name : ""
+      entry.name = clean(row.Driver.familyName || row.Driver.driverId, 32)
+      entry.code = clean(row.Driver.code, 6)
+      entry.team = clean(row.Constructors && row.Constructors[0] ? row.Constructors[0].name : "", 32)
     } else if (row.Constructor) {
-      entry.name = row.Constructor.name || row.Constructor.constructorId || ""
+      entry.name = clean(row.Constructor.name || row.Constructor.constructorId, 32)
       entry.code = ""
       entry.team = ""
     } else {
@@ -180,8 +195,8 @@ function parseDrivers(raw) {
     var d = rows[i]
     if (d.driver_number === undefined || d.driver_number === null) continue
     map[String(d.driver_number)] = {
-      acronym: d.name_acronym || ("#" + d.driver_number),
-      team: d.team_name || "",
+      acronym: clean(d.name_acronym || ("#" + d.driver_number), 6),
+      team: clean(d.team_name, 32),
       name: d.full_name || d.broadcast_name || ""
     }
   }
@@ -227,7 +242,7 @@ function gapText(intervalRow, isLeader) {
   if (!intervalRow) return ""
   var gap = intervalRow.gap_to_leader
   if (gap === null || gap === undefined || gap === "") return ""
-  if (typeof gap === "string") return gap.charAt(0) === "+" ? gap : "+" + gap
+  if (typeof gap === "string") { gap = clean(gap, 12); return gap.charAt(0) === "+" ? gap : "+" + gap }
   return "+" + Number(gap).toFixed(3)
 }
 
@@ -300,7 +315,11 @@ function foldTrackStatus(current, raw) {
   try { rows = JSON.parse(String(raw || "")) } catch (e) { return status }
   if (!rows || !rows.length) return status
   var sorted = rows.slice().sort(function(a, b) {
-    return String(a.date) < String(b.date) ? -1 : 1
+    // A valid comparator must return 0 for equal keys; openf1 race-control
+    // timestamps are second-precision, so ties are real and mis-ordering one
+    // could flip which status (e.g. RED) the pill shows.
+    var da = String(a.date), db = String(b.date)
+    return da < db ? -1 : (da > db ? 1 : 0)
   })
   for (var i = 0; i < sorted.length; i++) {
     var ev = sorted[i]
@@ -342,6 +361,7 @@ function leaderAcronym(rows) {
 
 if (typeof module !== "undefined") {
   module.exports = {
+    clean: clean,
     parseSchedule: parseSchedule,
     currentOrNext: currentOrNext,
     countdown: countdown,

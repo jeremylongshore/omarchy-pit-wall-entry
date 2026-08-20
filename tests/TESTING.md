@@ -9,7 +9,7 @@ Seven-layer map for this repo (Intent Solutions taxonomy):
 | L3 unit | **24 tests** over the pure `Model.js` data layer (incl. real Hungary-GP VSC replay for track status) | `tests/model.test.js` |
 | L4 integration | fixtures are real captured API responses, parsed end-to-end | `tests/fixtures/` |
 | L5 system | full render on a headless Quattro shell rig (Hyprland/sway + quickshell) | rig screenshots in `assets/` + `preview.png` |
-| L6 E2E | live-mode rehearsal via `debugTimeOffsetMs`; real-session soak during race weekends | manual |
+| L6 E2E | live-mode rehearsal via `PIT_WALL_FAKE_OFFSET_MS`; real-session soak during race weekends | manual |
 | L7 acceptance | `omarchy-plugin-validate` (upstream schema gate) green | pre-submission |
 
 CI runs L3/L4 on every push (`.github/workflows/test.yml`). The QML layer is

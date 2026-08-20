@@ -41,17 +41,11 @@ Schedule and standings refresh every 15 minutes by default. Live polling only ru
 session window and fetches incremental tails (the last ~3 minutes of events), so the widget
 stays light even across a full race distance.
 
-## Settings
+## Zero configuration
 
-All tunable from the widget's settings form (or `shell.json`):
-
-| Key | Default | What it does |
-| --- | --- | --- |
-| `refreshIntervalSec` | `900` | Schedule + standings refresh cadence |
-| `liveRefreshSec` | `20` | Live timing poll cadence during sessions |
-| `liveRows` | `10` | Leaderboard rows shown while live |
-| `standingsRows` | `5` | Rows per championship table |
-| `hideBetweenWeekends` | `Off` | Collapse the pill until 24h before the next session |
+There is no settings form. Pit Wall picks sensible defaults (15-minute schedule refresh,
+20-second live polling, 10 leaderboard rows, 5 standings rows) and shows the pill all
+season. The widget is the configuration.
 
 ## Theming
 
