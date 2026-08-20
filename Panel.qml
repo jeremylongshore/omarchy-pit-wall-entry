@@ -82,7 +82,8 @@ Panel {
   readonly property string label: {
     if (raceState.status === "off") return ""
     if (hideBetweenWeekends && raceState.status === "next" && raceState.msUntil > 24 * 3600000) return ""
-    return Model.pillText(raceState, Model.leaderAcronym(liveRowsModel))
+    // nf-fa-flag_checkered leads the pill so the slot reads as F1 at a glance.
+    return " " + Model.pillText(raceState, Model.leaderAcronym(liveRowsModel))
   }
 
   readonly property string tooltip: {
