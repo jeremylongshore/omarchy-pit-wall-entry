@@ -5,8 +5,10 @@
   "version": "1.0.0",
   "author": "Jeremy Longshore",
   "license": "MIT",
-  "description": "Your F1 pit wall in the Omarchy bar: next-session countdown that flips to live timing when the lights go out.",
-  "kinds": ["bar-widget"],
+  "description": "F1 race weekend widget: next-session countdown in the Omarchy bar, flipping to live timing while a session runs.",
+  "kinds": [
+    "bar-widget"
+  ],
   "entryPoints": {
     "barWidget": "BarWidget.qml"
   },
@@ -14,7 +16,12 @@
     "displayName": "Pit Wall",
     "description": "Bar pill counts down to the next F1 session and goes live during one. The panel carries the full weekend schedule in your local time, the live leaderboard with gaps, and both championship standings.",
     "category": "Info",
-    "aliases": ["f1", "pit-wall", "race-weekend", "formula1"],
+    "aliases": [
+      "f1",
+      "pit-wall",
+      "race-weekend",
+      "formula1"
+    ],
     "allowMultiple": false,
     "defaults": {
       "refreshIntervalSec": 900,
@@ -24,11 +31,53 @@
       "hideBetweenWeekends": false
     },
     "schema": [
-      { "key": "refreshIntervalSec", "type": "integer", "label": "Schedule refresh (seconds)", "min": 300, "max": 7200, "step": 300, "defaultValue": 900 },
-      { "key": "liveRefreshSec", "type": "integer", "label": "Live timing refresh (seconds)", "min": 10, "max": 120, "step": 5, "defaultValue": 20 },
-      { "key": "liveRows", "type": "integer", "label": "Live leaderboard rows", "min": 3, "max": 20, "step": 1, "defaultValue": 10 },
-      { "key": "standingsRows", "type": "integer", "label": "Standings rows per championship", "min": 3, "max": 20, "step": 1, "defaultValue": 5 },
-      { "key": "hideBetweenWeekends", "type": "enum", "label": "Hide pill until 24h before a session", "options": ["Off", "On"], "defaultValue": "Off", "description": "When On, the bar slot collapses outside race weekends and reappears a day before the next session." }
+      {
+        "key": "refreshIntervalSec",
+        "type": "integer",
+        "label": "Schedule refresh (seconds)",
+        "min": 300,
+        "max": 7200,
+        "step": 300,
+        "defaultValue": 900
+      },
+      {
+        "key": "liveRefreshSec",
+        "type": "integer",
+        "label": "Live timing refresh (seconds)",
+        "min": 10,
+        "max": 120,
+        "step": 5,
+        "defaultValue": 20
+      },
+      {
+        "key": "liveRows",
+        "type": "integer",
+        "label": "Live leaderboard rows",
+        "min": 3,
+        "max": 20,
+        "step": 1,
+        "defaultValue": 10
+      },
+      {
+        "key": "standingsRows",
+        "type": "integer",
+        "label": "Standings rows per championship",
+        "min": 3,
+        "max": 20,
+        "step": 1,
+        "defaultValue": 5
+      },
+      {
+        "key": "hideBetweenWeekends",
+        "type": "enum",
+        "label": "Hide pill until 24h before a session",
+        "options": [
+          "Off",
+          "On"
+        ],
+        "defaultValue": "Off",
+        "description": "When On, the bar slot collapses outside race weekends and reappears a day before the next session."
+      }
     ]
   }
 }

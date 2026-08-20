@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="1200" height="340" role="img" aria-label="Pit Wall — Your F1 pit wall in the Omarchy bar.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="1200" height="340" role="img" aria-label="Pit Wall — The next F1 session, counted down in your bar.">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#16090b"/>
@@ -33,7 +33,7 @@
   <!-- Title block -->
   <text x="72" y="150" font-family="'JetBrains Mono','Cascadia Mono',monospace" font-size="72" font-weight="700" letter-spacing="6" fill="#f3efe9">PIT WALL</text>
   <rect x="76" y="176" width="330" height="4" fill="url(#rule)"/>
-  <text x="72" y="222" font-family="'JetBrains Mono','Cascadia Mono',monospace" font-size="24" letter-spacing="1" fill="#c8c2ba">Your F1 pit wall in the Omarchy bar.</text>
+  <text x="72" y="222" font-family="'JetBrains Mono','Cascadia Mono',monospace" font-size="24" letter-spacing="1" fill="#c8c2ba">The next F1 session, counted down in your bar.</text>
   <text x="72" y="258" font-family="'JetBrains Mono','Cascadia Mono',monospace" font-size="16" letter-spacing="1" fill="#8d8781">countdown pill · live timing · schedule in local time · championship standings</text>
 
   <!-- Bar pill mock, top right -->

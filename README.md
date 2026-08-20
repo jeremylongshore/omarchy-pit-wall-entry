@@ -2,7 +2,8 @@
 
 # Pit Wall
 
-Your F1 pit wall in the Omarchy bar.
+The next F1 session, counted down in your Omarchy bar — and live timing from the moment
+it starts.
 
 A bar pill counts down to the next Formula 1 session — `QUALI 2h 14m` — and flips to live
 timing the moment the lights go out: `RACE ▸ VER`, lit in your theme's active color. Click it
