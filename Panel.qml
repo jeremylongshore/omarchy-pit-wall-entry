@@ -62,6 +62,7 @@ Panel {
   property var liveGaps: ({})
   property string liveSessionKey: ""
   property string liveFetchedFullAt: ""
+  property string trackStatus: "green"
 
   // Debug-only clock shift (ms) so a test rig can rehearse live mode outside
   // a real session window. Stays 0 in normal use; not surfaced in settings.
@@ -74,6 +75,7 @@ Panel {
   readonly property bool isLive: raceState.status === "live"
   readonly property var liveRowsModel: isLive
     ? Model.boardRows(livePositions, liveGaps, liveDrivers, liveRowsCount) : []
+  readonly property string trackTag: isLive ? Model.statusTag(trackStatus) : ""
 
   readonly property int refreshSec: Math.max(300, parseInt(setting("refreshIntervalSec", 900), 10) || 900)
   readonly property int liveRefreshSec: Math.max(10, parseInt(setting("liveRefreshSec", 20), 10) || 20)
@@ -87,7 +89,7 @@ Panel {
     if (raceState.status === "off") return ""
     if (hideBetweenWeekends && raceState.status === "next" && raceState.msUntil > 24 * 3600000) return ""
     // nf-fa-flag_checkered leads the pill so the slot reads as F1 at a glance.
-    return " " + Model.pillText(raceState, Model.leaderAcronym(liveRowsModel))
+    return " " + Model.pillText(raceState, Model.leaderAcronym(liveRowsModel), trackTag)
   }
 
   readonly property string tooltip: {
@@ -126,6 +128,14 @@ Panel {
         "https://api.openf1.org/v1/intervals?session_key=latest" + (since === "" ? "&date>=" + new Date(nowMs - 600000).toISOString() : since)]
       liveGapsProc.running = true
     }
+    // Race control is tiny (~100 rows per session), so the first live tick
+    // takes the full history — SC/red periods that started before the widget
+    // began polling must still be visible.
+    if (!raceControlProc.running) {
+      raceControlProc.command = ["curl", "-fsS", "--max-time", "15",
+        "https://api.openf1.org/v1/race_control?session_key=latest" + since]
+      raceControlProc.running = true
+    }
   }
 
   onIsLiveChanged: {
@@ -137,6 +147,7 @@ Panel {
       liveGaps = ({})
       liveDrivers = ({})
       liveFetchedFullAt = ""
+      trackStatus = "green"
     }
   }
 
@@ -203,6 +214,14 @@ Panel {
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: root.liveGaps = Model.mergeEvents(root.liveGaps, text)
+    }
+  }
+
+  Process {
+    id: raceControlProc
+    stdout: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: root.trackStatus = Model.foldTrackStatus(root.trackStatus, text)
     }
   }
 
@@ -318,7 +337,7 @@ Panel {
                   Text {
                     id: liveText
                     anchors.centerIn: parent
-                    text: "● LIVE"
+                    text: root.trackTag === "" ? "● LIVE" : "● LIVE · " + root.trackTag
                     color: root.bar ? root.bar.background : Color.background
                     font.family: root.bar ? root.bar.fontFamily : Style.font.family
                     font.pixelSize: Style.font.caption

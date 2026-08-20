@@ -127,11 +127,12 @@ function countdown(msUntil) {
 }
 
 // Bar pill text. Countdown mode: "QUALI 2h 14m". Live mode with a known
-// leader: "RACE ▸ VER". Live without position data yet: "RACE ▸ LIVE".
-function pillText(state, leaderAcronym) {
+// leader: "RACE ▸ VER"; an abnormal track status outranks the leader:
+// "RACE ▸ SC". Live with neither yet: "RACE ▸ LIVE".
+function pillText(state, leaderAcronym, trackTag) {
   if (!state || state.status === "off") return ""
   if (state.status === "live")
-    return state.session.short + " ▸ " + (leaderAcronym || "LIVE")
+    return state.session.short + " ▸ " + (trackTag || leaderAcronym || "LIVE")
   return state.session.short + " " + countdown(state.msUntil)
 }
 
@@ -284,6 +285,56 @@ function pickLiveSession(raw, nowMs) {
   return null
 }
 
+// Fold openf1 /race_control events into a track-wide status. Event stream
+// examples (real, Hungary 2026): category "SafetyCar" with message
+// "VSC DEPLOYED" / "SAFETY CAR DEPLOYED" / "VSC ENDING", and category "Flag"
+// with scope "Track" carrying GREEN / CLEAR / YELLOW / DOUBLE YELLOW / RED /
+// CHEQUERED. Sector- and driver-scoped flags are deliberately ignored — the
+// pill reports the whole track, not one marshal post. Events are applied in
+// date order on top of `current`, so overlapping tail polls stay correct
+// (the newest event always decides). Returns the new status string:
+// green | yellow | sc | vsc | red | chequered.
+function foldTrackStatus(current, raw) {
+  var status = current || "green"
+  var rows
+  try { rows = JSON.parse(String(raw || "")) } catch (e) { return status }
+  if (!rows || !rows.length) return status
+  var sorted = rows.slice().sort(function(a, b) {
+    return String(a.date) < String(b.date) ? -1 : 1
+  })
+  for (var i = 0; i < sorted.length; i++) {
+    var ev = sorted[i]
+    var message = String(ev.message || "").toUpperCase()
+    if (ev.category === "SafetyCar") {
+      // "ENDING"/"IN THIS LAP" mean the interruption is wrapping up, but the
+      // track is only green again when the CLEAR/GREEN flag arrives.
+      if (message.indexOf("VIRTUAL") !== -1 || message.indexOf("VSC") !== -1) {
+        if (message.indexOf("DEPLOYED") !== -1) status = "vsc"
+      } else if (message.indexOf("DEPLOYED") !== -1) {
+        status = "sc"
+      }
+      continue
+    }
+    if (ev.category !== "Flag" || ev.scope !== "Track") continue
+    var flag = String(ev.flag || "").toUpperCase()
+    if (flag === "RED") status = "red"
+    else if (flag === "YELLOW" || flag === "DOUBLE YELLOW") status = "yellow"
+    else if (flag === "GREEN" || flag === "CLEAR") status = "green"
+    else if (flag === "CHEQUERED") status = "chequered"
+  }
+  return status
+}
+
+// Compact pill tag for an abnormal track status; empty when the pill should
+// just show the leader (green-flag running, or the race is over).
+function statusTag(status) {
+  if (status === "sc") return "SC"
+  if (status === "vsc") return "VSC"
+  if (status === "red") return "RED"
+  if (status === "yellow") return "YEL"
+  return ""
+}
+
 // Leader acronym straight off already-joined leaderboard rows.
 function leaderAcronym(rows) {
   return rows && rows.length ? rows[0].acronym : ""
@@ -303,6 +354,8 @@ if (typeof module !== "undefined") {
     gapText: gapText,
     leaderboard: leaderboard,
     pickLiveSession: pickLiveSession,
+    foldTrackStatus: foldTrackStatus,
+    statusTag: statusTag,
     leaderAcronym: leaderAcronym
   }
 }

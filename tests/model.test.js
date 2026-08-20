@@ -192,6 +192,65 @@ test("pickLiveSession trusts openf1 windows and skips cancelled rows", () => {
   assert.equal(Model.pickLiveSession("junk", during), null)
 })
 
+const raceControlRaw = fixture("openf1-race-control.json")
+
+test("foldTrackStatus replays the real Hungary VSC sequence correctly", () => {
+  const events = JSON.parse(raceControlRaw)
+  // Up to just after VSC deployment (14:22:55Z): status is vsc.
+  const untilVsc = events.filter((e) => e.date <= "2026-07-26T14:23:00+00:00")
+  assert.equal(Model.foldTrackStatus("green", JSON.stringify(untilVsc)), "vsc")
+  // "VSC ENDING" alone does not clear it — only TRACK CLEAR does.
+  const untilEnding = events.filter((e) => e.date <= "2026-07-26T14:24:15+00:00")
+  assert.equal(Model.foldTrackStatus("green", JSON.stringify(untilEnding)), "vsc")
+  const untilClear = events.filter((e) => e.date <= "2026-07-26T14:24:30+00:00")
+  assert.equal(Model.foldTrackStatus("green", JSON.stringify(untilClear)), "green")
+  // Whole session ends on the chequered flag.
+  assert.equal(Model.foldTrackStatus("green", raceControlRaw), "chequered")
+})
+
+test("foldTrackStatus handles SC, red, track yellows; ignores sector/driver flags", () => {
+  const mk = (over) => Object.assign({ category: "Flag", scope: "Track", flag: null, message: "", date: "2026-01-01T00:00:00" }, over)
+  assert.equal(Model.foldTrackStatus("green", JSON.stringify([
+    { category: "SafetyCar", message: "SAFETY CAR DEPLOYED", date: "1" }
+  ])), "sc")
+  assert.equal(Model.foldTrackStatus("sc", JSON.stringify([
+    mk({ flag: "GREEN", message: "TRACK CLEAR", date: "2" })
+  ])), "green")
+  assert.equal(Model.foldTrackStatus("green", JSON.stringify([mk({ flag: "RED" })])), "red")
+  assert.equal(Model.foldTrackStatus("green", JSON.stringify([mk({ flag: "DOUBLE YELLOW" })])), "yellow")
+  // Sector-scoped yellow and driver-scoped flags do not touch the pill.
+  assert.equal(Model.foldTrackStatus("green", JSON.stringify([
+    mk({ flag: "YELLOW", scope: "Sector", sector: 7 }),
+    mk({ flag: "BLUE", scope: "Driver", driver_number: 55 })
+  ])), "green")
+  // Garbage and empty batches keep the current status.
+  assert.equal(Model.foldTrackStatus("vsc", "junk"), "vsc")
+  assert.equal(Model.foldTrackStatus("vsc", "[]"), "vsc")
+  // Out-of-order batch: newest event decides regardless of array order.
+  assert.equal(Model.foldTrackStatus("green", JSON.stringify([
+    mk({ flag: "GREEN", message: "TRACK CLEAR", date: "9" }),
+    { category: "SafetyCar", message: "VSC DEPLOYED", date: "3" }
+  ])), "green")
+})
+
+test("statusTag maps abnormal statuses only", () => {
+  assert.equal(Model.statusTag("sc"), "SC")
+  assert.equal(Model.statusTag("vsc"), "VSC")
+  assert.equal(Model.statusTag("red"), "RED")
+  assert.equal(Model.statusTag("yellow"), "YEL")
+  assert.equal(Model.statusTag("green"), "")
+  assert.equal(Model.statusTag("chequered"), "")
+  assert.equal(Model.statusTag(undefined), "")
+})
+
+test("pillText: track status outranks the leader while live", () => {
+  const schedule = Model.parseSchedule(scheduleRaw)
+  const live = Model.currentOrNext(schedule.races, Date.parse("2026-08-23T13:45:00Z"))
+  assert.equal(Model.pillText(live, "NOR", "SC"), "RACE ▸ SC")
+  assert.equal(Model.pillText(live, "NOR", ""), "RACE ▸ NOR")
+  assert.equal(Model.pillText(live, "", ""), "RACE ▸ LIVE")
+})
+
 test("leaderAcronym reads the front of the field", () => {
   const rows = Model.leaderboard(positionsRaw, openf1DriversRaw, intervalsRaw, 0)
   assert.equal(Model.leaderAcronym(rows), rows[0].acronym)
