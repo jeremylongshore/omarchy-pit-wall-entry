@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "author": "Jeremy Longshore",
   "license": "MIT",
-  "description": "F1 race weekend widget: next-session countdown in the Omarchy bar, flipping to live timing while a session runs.",
+  "description": "F1 race weekend widget for the Omarchy bar. Next-session countdown that flips to live timing while a session runs. Free, keyless data from jolpica and openf1.",
   "kinds": [
     "bar-widget"
   ],
@@ -14,7 +14,7 @@
   },
   "barWidget": {
     "displayName": "Pit Wall",
-    "description": "Bar pill counts down to the next F1 session and goes live during one. The panel carries the full weekend schedule in your local time, the live leaderboard with gaps, and both championship standings.",
+    "description": "Bar pill counts down to the next F1 session and goes live during one. The panel carries the weekend schedule in your local time, the live leaderboard with gaps, and both championship standings. Data comes free and keyless from jolpica (schedule, standings) and openf1 (live feed).",
     "category": "Info",
     "aliases": [
       "f1",

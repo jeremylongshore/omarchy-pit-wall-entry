@@ -30,16 +30,31 @@ Then add **Pit Wall** to your bar layout (Omarchy menu → Bar, or `~/.config/om
 - **Middle-click** the pill to force a refresh. `Esc` closes the panel, `Tab` walks to the
   neighboring panel, exactly like the built-in widgets.
 
-## Data sources: free, keyless, no accounts
+## Where it pulls data: free, keyless, no accounts
 
-- [jolpica-f1](https://github.com/jolpica/jolpica-f1) (`api.jolpi.ca`) for the season schedule and
-  championship standings. It is the community successor to the Ergast API.
-- [OpenF1](https://openf1.org) (`api.openf1.org`) for live session positions, intervals, and race
-  control.
+Pit Wall makes read-only HTTPS GET requests to two public F1 APIs. No auth, no tokens, no
+accounts, nothing sent anywhere. These are the only network calls it makes.
+
+[jolpica-f1](https://github.com/jolpica/jolpica-f1) (`api.jolpi.ca`), the community successor to
+the Ergast API, for the schedule and standings:
+
+- `GET api.jolpi.ca/ergast/f1/current.json` (weekend schedule)
+- `GET api.jolpi.ca/ergast/f1/current/driverstandings.json`
+- `GET api.jolpi.ca/ergast/f1/current/constructorstandings.json`
+
+[OpenF1](https://openf1.org) (`api.openf1.org`) for the live feed, polled only while a session is
+running:
+
+- `GET api.openf1.org/v1/sessions` (authoritative session window)
+- `GET api.openf1.org/v1/drivers`
+- `GET api.openf1.org/v1/position` (leaderboard order)
+- `GET api.openf1.org/v1/intervals` (gaps to the leader)
+- `GET api.openf1.org/v1/race_control` (flags, safety car)
 
 Schedule and standings refresh every 15 minutes. Live polling only runs during a session window
 and fetches incremental tails (the last few minutes of events), so the widget stays light even
-across a full race distance.
+across a full race distance. Every request is byte-capped so an oversized response can never
+stall the shell.
 
 ## Zero configuration
 
