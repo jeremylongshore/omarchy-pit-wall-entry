@@ -605,11 +605,27 @@ Panel {
                     width: driversCol.width
                     height: Style.space(20)
 
-                    Text {
+                    // Team colour, because that is how anyone who follows the
+                    // sport actually parses a standings table. Only the hue
+                    // comes from the team; saturation and lightness are fixed
+                    // here so Ferrari reads as Ferrari without a hardcoded
+                    // livery hex fighting the user's theme.
+                    Rectangle {
+                      id: dStripe
                       anchors.left: parent.left
                       anchors.leftMargin: Style.space(16)
                       anchors.verticalCenter: parent.verticalCenter
-                      width: Math.min(implicitWidth, parent.width - (Style.space(16)) - Style.space(16))
+                      width: Style.space(2)
+                      height: Style.space(12)
+                      radius: width / 2
+                      color: Qt.hsla(Model.teamHue(modelData.team), 0.62, 0.58, 0.95)
+                    }
+
+                    Text {
+                      anchors.left: dStripe.right
+                      anchors.leftMargin: Style.space(8)
+                      anchors.verticalCenter: parent.verticalCenter
+                      width: Math.min(implicitWidth, parent.width - Style.space(52))
                       elide: Text.ElideRight
                       text: modelData.pos + "  " + (modelData.code || modelData.name)
                       textFormat: Text.PlainText
@@ -661,9 +677,20 @@ Panel {
                     width: constructorsCol.width
                     height: Style.space(20)
 
-                    Text {
+                    Rectangle {
+                      id: cStripe
                       anchors.left: parent.left
                       anchors.leftMargin: Style.space(16)
+                      anchors.verticalCenter: parent.verticalCenter
+                      width: Style.space(2)
+                      height: Style.space(12)
+                      radius: width / 2
+                      color: Qt.hsla(Model.teamHue(modelData.name), 0.62, 0.58, 0.95)
+                    }
+
+                    Text {
+                      anchors.left: cStripe.right
+                      anchors.leftMargin: Style.space(8)
                       anchors.verticalCenter: parent.verticalCenter
                       text: modelData.pos + "  " + modelData.name
                       textFormat: Text.PlainText
@@ -671,7 +698,7 @@ Panel {
                       font.family: root.bar ? root.bar.fontFamily : Style.font.family
                       font.pixelSize: Style.font.bodySmall
                       elide: Text.ElideRight
-                      width: parent.width - Style.space(56)
+                      width: parent.width - Style.space(66)
                     }
 
                     Text {

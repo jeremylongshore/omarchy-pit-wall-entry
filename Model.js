@@ -359,8 +359,35 @@ function leaderAcronym(rows) {
   return rows && rows.length ? rows[0].acronym : ""
 }
 
+// F1 identity is colour. A standings table rendered entirely in one grey asks a
+// reader to parse ten team names as text when every one of them has a livery
+// they already recognise faster than the word.
+//
+// Only the HUE comes from the team; saturation and lightness are fixed by the
+// caller, so Ferrari reads as Ferrari without a hardcoded #DC0000 fighting
+// whatever theme the user actually runs. Unknown or new teams fall through to a
+// stable hue derived from the name rather than collapsing to one colour.
+function teamHue(team) {
+  var t = String(team || "").toLowerCase()
+  if (t.indexOf("ferrari") >= 0) return 0.005      // rosso corsa
+  if (t.indexOf("mercedes") >= 0) return 0.46      // petronas teal
+  if (t.indexOf("mclaren") >= 0) return 0.065      // papaya
+  if (t.indexOf("red bull") >= 0 && t.indexOf("rb") < 0) return 0.66
+  if (t.indexOf("racing bulls") >= 0 || t.indexOf("rb f1") >= 0) return 0.60
+  if (t.indexOf("williams") >= 0) return 0.56
+  if (t.indexOf("aston") >= 0) return 0.42         // british racing green
+  if (t.indexOf("alpine") >= 0) return 0.55
+  if (t.indexOf("haas") >= 0) return 0.02
+  if (t.indexOf("sauber") >= 0 || t.indexOf("audi") >= 0) return 0.30
+  if (t.indexOf("cadillac") >= 0) return 0.12
+  var h = 0
+  for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) % 360
+  return h / 360
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
+    teamHue: teamHue,
     clean: clean,
     parseSchedule: parseSchedule,
     currentOrNext: currentOrNext,
