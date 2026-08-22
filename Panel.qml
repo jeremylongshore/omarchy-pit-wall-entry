@@ -360,6 +360,10 @@ Panel {
                 text: !root.scheduleLoaded ? "LOADING…"
                   : (root.raceState.status === "off" ? "SEASON COMPLETE" : root.raceState.race.name.toUpperCase())
                 textFormat: Text.PlainText
+                // Race names come from jolpica, so this is not authored text.
+                // heroCol is anchored left and right, so its width is the frame.
+                width: heroCol.width
+                elide: Text.ElideRight
                 color: root.bar ? root.bar.foreground : Color.foreground
                 font.family: root.bar ? root.bar.fontFamily : Style.font.family
                 font.pixelSize: Style.font.title
@@ -372,6 +376,8 @@ Panel {
                 text: !root.scheduleLoaded ? "Fetching schedule from jolpica…"
                   : "ROUND " + root.raceState.race.round + " · " + root.raceState.race.circuit.toUpperCase()
                 textFormat: Text.PlainText
+                width: heroCol.width
+                elide: Text.ElideRight
                 color: root.bar ? Qt.darker(root.bar.foreground, 1.4) : Color.muted
                 font.family: root.bar ? root.bar.fontFamily : Style.font.family
                 font.pixelSize: Style.font.caption
@@ -384,7 +390,7 @@ Panel {
 
                 Rectangle {
                   visible: root.isLive
-                  width: liveText.implicitWidth + Style.space(12)
+                  width: Math.min(liveText.implicitWidth + Style.space(12), heroCol.width)
                   height: liveText.implicitHeight + Style.space(4)
                   anchors.verticalCenter: parent.verticalCenter
                   radius: Style.cornerRadius
@@ -395,6 +401,8 @@ Panel {
                     anchors.centerIn: parent
                     text: root.trackTag === "" ? "● LIVE" : "● LIVE · " + root.trackTag
                     textFormat: Text.PlainText
+                    width: Math.min(implicitWidth, heroCol.width - Style.space(12))
+                    elide: Text.ElideRight
                     color: root.bar ? root.bar.background : Color.background
                     font.family: root.bar ? root.bar.fontFamily : Style.font.family
                     font.pixelSize: Style.font.caption
@@ -407,6 +415,8 @@ Panel {
                     ? root.raceState.session.label
                     : root.raceState.session.label + " in " + Model.countdown(root.raceState.msUntil))
                   textFormat: Text.PlainText
+                  width: Math.min(implicitWidth, heroCol.width)
+                  elide: Text.ElideRight
                   color: root.bar ? root.bar.foreground : Color.foreground
                   font.family: root.bar ? root.bar.fontFamily : Style.font.family
                   font.pixelSize: Style.font.display
@@ -447,6 +457,7 @@ Panel {
                   anchors.leftMargin: Style.space(16)
                   anchors.verticalCenter: parent.verticalCenter
                   width: Style.space(26)
+                  elide: Text.ElideRight
                   text: "P" + modelData.pos
                   textFormat: Text.PlainText
                   color: root.bar ? Qt.darker(root.bar.foreground, 1.4) : Color.muted
@@ -458,6 +469,8 @@ Panel {
                   anchors.left: parent.left
                   anchors.leftMargin: Style.space(50)
                   anchors.verticalCenter: parent.verticalCenter
+                  width: Math.min(implicitWidth, parent.width - (Style.space(50)) - Style.space(16))
+                  elide: Text.ElideRight
                   text: modelData.acronym
                   textFormat: Text.PlainText
                   color: root.bar ? root.bar.foreground : Color.foreground
@@ -483,6 +496,8 @@ Panel {
                   anchors.right: parent.right
                   anchors.rightMargin: Style.space(16)
                   anchors.verticalCenter: parent.verticalCenter
+                  width: Math.min(implicitWidth, parent.width - (Style.space(16)) - Style.space(16))
+                  elide: Text.ElideRight
                   text: modelData.gap
                   textFormat: Text.PlainText
                   color: root.bar ? Qt.darker(root.bar.foreground, modelData.pos === 1 ? 1.0 : 1.3) : Color.foreground
@@ -522,6 +537,8 @@ Panel {
                   anchors.left: parent.left
                   anchors.leftMargin: Style.space(16)
                   anchors.verticalCenter: parent.verticalCenter
+                  width: Math.min(implicitWidth, parent.width - (Style.space(16)) - Style.space(16))
+                  elide: Text.ElideRight
                   text: modelData.label
                   textFormat: Text.PlainText
                   color: {
@@ -538,6 +555,8 @@ Panel {
                   anchors.right: parent.right
                   anchors.rightMargin: Style.space(16)
                   anchors.verticalCenter: parent.verticalCenter
+                  width: Math.min(implicitWidth, parent.width - (Style.space(16)) - Style.space(16))
+                  elide: Text.ElideRight
                   text: isNow ? "IN PROGRESS" : Qt.formatDateTime(new Date(modelData.startMs), "ddd HH:mm")
                   textFormat: Text.PlainText
                   color: {
@@ -590,6 +609,8 @@ Panel {
                       anchors.left: parent.left
                       anchors.leftMargin: Style.space(16)
                       anchors.verticalCenter: parent.verticalCenter
+                      width: Math.min(implicitWidth, parent.width - (Style.space(16)) - Style.space(16))
+                      elide: Text.ElideRight
                       text: modelData.pos + "  " + (modelData.code || modelData.name)
                       textFormat: Text.PlainText
                       color: root.bar ? root.bar.foreground : Color.foreground
@@ -601,6 +622,8 @@ Panel {
                       anchors.right: parent.right
                       anchors.rightMargin: Style.space(20)
                       anchors.verticalCenter: parent.verticalCenter
+                      width: Math.min(implicitWidth, parent.width - (Style.space(20)) - Style.space(16))
+                      elide: Text.ElideRight
                       text: modelData.points
                       textFormat: Text.PlainText
                       color: root.bar ? Qt.darker(root.bar.foreground, 1.3) : Color.muted
@@ -655,6 +678,8 @@ Panel {
                       anchors.right: parent.right
                       anchors.rightMargin: Style.space(16)
                       anchors.verticalCenter: parent.verticalCenter
+                      width: Math.min(implicitWidth, parent.width - (Style.space(16)) - Style.space(16))
+                      elide: Text.ElideRight
                       text: modelData.points
                       textFormat: Text.PlainText
                       color: root.bar ? Qt.darker(root.bar.foreground, 1.3) : Color.muted
