@@ -88,6 +88,26 @@ Panel {
   property double nowMs: Date.now() + debugTimeOffsetMs
 
   readonly property var raceState: Model.currentOrNext(schedule.races, nowMs)
+
+  // The rounds after the one in view, one line each.
+  // Set whenever a fetch lands, so the footer can name the source rather than
+  // leaving the reader to guess whether a quiet panel is quiet or broken.
+  property string lastSource: ""
+  property double lastFetchMs: 0
+
+  readonly property string sourceLine: {
+    if (!root.scheduleLoaded) return "fetching…"
+    var src = root.lastSource || "jolpica"
+    if (root.openf1Live) src += " + openf1 live"
+    var when = root.lastFetchMs > 0
+      ? Qt.formatDateTime(new Date(root.lastFetchMs), "HH:mm")
+      : ""
+    return src + "  ·  times local" + (when ? "  ·  updated " + when : "")
+  }
+
+  readonly property var upcoming: root.raceState.race
+    ? Model.upcomingRaces(root.schedule.races, root.raceState.race.round, 3)
+    : []
   // Live if jolpica's estimate says so OR openf1's authoritative window is
   // still open (long race). Either source keeps the leaderboard alive.
   readonly property bool scheduleLive: raceState.status === "live"
@@ -188,6 +208,8 @@ Panel {
       onStreamFinished: {
         var parsed = Model.parseSchedule(text)
         if (parsed.races.length) {
+          root.lastSource = "jolpica"
+          root.lastFetchMs = Date.now()
           root.schedule = parsed
           root.scheduleLoaded = true
         }
@@ -357,8 +379,14 @@ Panel {
               spacing: Style.space(4)
 
               Text {
+                // Flag first. A country flag is recognised before a word of the
+                // race name is read, and the round number answers "where are we
+                // in the season" without a second line.
                 text: !root.scheduleLoaded ? "LOADING…"
-                  : (root.raceState.status === "off" ? "SEASON COMPLETE" : root.raceState.race.name.toUpperCase())
+                  : (root.raceState.status === "off" ? "SEASON COMPLETE"
+                     : (Model.countryFlag(root.raceState.race.country)
+                        + (Model.countryFlag(root.raceState.race.country) ? "  " : "")
+                        + root.raceState.race.name.toUpperCase()))
                 textFormat: Text.PlainText
                 // Race names come from jolpica, so this is not authored text.
                 // heroCol is anchored left and right, so its width is the frame.
@@ -374,7 +402,15 @@ Panel {
               Text {
                 visible: !root.scheduleLoaded || root.raceState.status !== "off"
                 text: !root.scheduleLoaded ? "Fetching schedule from jolpica…"
-                  : "ROUND " + root.raceState.race.round + " · " + root.raceState.race.circuit.toUpperCase()
+                  : ("R" + root.raceState.race.round + "  ·  "
+                     + root.raceState.race.circuit.toUpperCase()
+                     // Zandvoort races at Circuit Park Zandvoort, so printing
+                     // both reads as a stutter. Only add the town when the
+                     // circuit name does not already contain it.
+                     + ((root.raceState.race.locality &&
+                         root.raceState.race.circuit.toUpperCase().indexOf(
+                           root.raceState.race.locality.toUpperCase()) < 0)
+                        ? "  ·  " + root.raceState.race.locality.toUpperCase() : ""))
                 textFormat: Text.PlainText
                 width: heroCol.width
                 elide: Text.ElideRight
@@ -571,6 +607,69 @@ Panel {
             }
           }
 
+          // ---- Next rounds. One line each, not three expanded weekends: this
+          //      answers "what is coming" without pushing the championship off
+          //      the panel, which is the table nobody else in this category has.
+          Column {
+            id: nextCol
+            width: parent.width
+            spacing: Style.spacing.xxs
+            visible: root.upcoming.length > 0
+
+            Text {
+              text: "NEXT ROUNDS"
+              textFormat: Text.PlainText
+              width: nextCol.width - Style.space(32)
+              x: Style.space(16)
+              elide: Text.ElideRight
+              color: root.bar ? Qt.darker(root.bar.foreground, 1.5) : Color.muted
+              font.family: root.bar ? root.bar.fontFamily : Style.font.family
+              font.pixelSize: Style.font.caption
+              font.bold: true
+              font.letterSpacing: 1
+              bottomPadding: Style.spacing.xs
+            }
+
+            Repeater {
+              model: root.upcoming
+
+              Item {
+                required property var modelData
+                width: nextCol.width
+                height: Style.space(19)
+
+                Text {
+                  anchors.left: parent.left
+                  anchors.leftMargin: Style.space(16)
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: parent.width - Style.space(112)
+                  elide: Text.ElideRight
+                  text: (Model.countryFlag(modelData.country)
+                         + (Model.countryFlag(modelData.country) ? "  " : ""))
+                        + "R" + modelData.round + "  " + modelData.name
+                  textFormat: Text.PlainText
+                  color: root.bar ? Qt.darker(root.bar.foreground, 1.25) : Color.foreground
+                  font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                  font.pixelSize: Style.font.bodySmall
+                }
+
+                Text {
+                  anchors.right: parent.right
+                  anchors.rightMargin: Style.space(16)
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: Style.space(84)
+                  horizontalAlignment: Text.AlignRight
+                  elide: Text.ElideRight
+                  text: Model.raceDateText(modelData, root.nowMs)
+                  textFormat: Text.PlainText
+                  color: root.bar ? Qt.darker(root.bar.foreground, 1.7) : Color.muted
+                  font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                  font.pixelSize: Style.font.bodySmall
+                }
+              }
+            }
+          }
+
           // ---- Championship standings, drivers and constructors side by side.
           Column {
             visible: root.driverRows.length > 0
@@ -716,6 +815,33 @@ Panel {
                   }
                 }
               }
+            }
+          }
+
+          // ---- Provenance. Which source answered and when it last did.
+          //
+          //      Free public F1 APIs go down, and when they do a schedule
+          //      widget looks identical to one that is simply wrong. Naming the
+          //      source and the fetch time turns "is this stale?" from a guess
+          //      into something the panel answers itself.
+          Item {
+            width: parent.width
+            height: sourceText.implicitHeight + Style.spacing.lg
+
+            Text {
+              id: sourceText
+              anchors.left: parent.left
+              anchors.leftMargin: Style.space(16)
+              anchors.right: parent.right
+              anchors.rightMargin: Style.space(16)
+              anchors.verticalCenter: parent.verticalCenter
+              text: root.sourceLine
+              textFormat: Text.PlainText
+              elide: Text.ElideRight
+              color: root.bar ? Qt.darker(root.bar.foreground, 1.8) : Color.muted
+              font.family: root.bar ? root.bar.fontFamily : Style.font.family
+              font.pixelSize: Style.font.caption
+              font.letterSpacing: 1
             }
           }
 

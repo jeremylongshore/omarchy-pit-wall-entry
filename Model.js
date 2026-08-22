@@ -385,8 +385,89 @@ function teamHue(team) {
   return h / 360
 }
 
+// When a future round actually races, as a short absolute date.
+//
+// Absolute, not "in 3 weeks": a relative string on a list of three consecutive
+// rounds reads as "in 2w, in 5w, in 7w", which is arithmetic the reader has to
+// undo to answer the only question they asked, which is what day to keep free.
+function raceDateText(race, nowMs) {
+  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+  var sessions = (race && race.sessions) || []
+  var startMs = 0
+  for (var i = 0; i < sessions.length; i++) {
+    if (sessions[i].kind === "race") { startMs = sessions[i].startMs; break }
+  }
+  // Some rounds publish practice before the race slot is confirmed, so fall
+  // back to the first session rather than rendering an empty column.
+  if (!startMs && sessions.length) startMs = sessions[0].startMs
+  if (!startMs) return ""
+  var d = new Date(startMs)
+  return MONTHS[d.getMonth()] + " " + d.getDate()
+}
+
+// The rounds AFTER the one currently in view.
+//
+// A rival expands three whole weekends, which is a long list that pushes
+// everything else off the panel. Pit Wall shows this weekend in full and then
+// the next rounds as one line each, so "what is on now" and "what is coming"
+// both fit above the championship rather than competing with it.
+function upcomingRaces(races, currentRound, limit) {
+  var out = []
+  var list = races || []
+  var n = Number(limit) || 3
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].round <= currentRound) continue
+    out.push(list[i])
+    if (out.length >= n) break
+  }
+  return out
+}
+
+// The FIA three-letter country code for each race.
+//
+// Emoji flags were the first attempt and they are a trap. A flag is a pair of
+// regional-indicator codepoints that only becomes a flag if the system has an
+// emoji font; on a box without one every race renders as two empty boxes, and
+// the panel looks broken rather than plain. The rig proved that immediately.
+//
+// Codes always render, in the same monospace as everything else, and they are
+// what the sport itself uses on timing screens and in results. NED, ITA, ESP
+// need no font support and no legend.
+//
+// Jolpica returns the country as a human name, and its spellings are not always
+// the obvious ones: "UK" not "United Kingdom", "USA" and "United States" both
+// appear, "UAE" for Abu Dhabi, and Miami, Vegas and Austin all report as the US.
+var COUNTRY_CODES = {
+  "australia": "AUS", "bahrain": "BRN", "saudi arabia": "SAU", "japan": "JPN",
+  "china": "CHN", "usa": "USA", "united states": "USA", "america": "USA",
+  "italy": "ITA", "monaco": "MON", "canada": "CAN", "spain": "ESP",
+  "austria": "AUT", "uk": "GBR", "united kingdom": "GBR", "great britain": "GBR",
+  "hungary": "HUN", "belgium": "BEL", "netherlands": "NED", "azerbaijan": "AZE",
+  "singapore": "SIN", "mexico": "MEX", "brazil": "BRA", "qatar": "QAT",
+  "uae": "UAE", "united arab emirates": "UAE", "france": "FRA",
+  "portugal": "POR", "turkey": "TUR", "russia": "RUS", "germany": "GER",
+  "malaysia": "MAS", "vietnam": "VIE", "south africa": "RSA", "korea": "KOR",
+  "india": "IND", "argentina": "ARG", "switzerland": "SUI", "sweden": "SWE",
+  "morocco": "MAR"
+}
+
+// Named countryFlag for continuity with the call sites; it returns a code, and
+// an unrecognised country returns empty so the caller renders nothing rather
+// than a placeholder.
+function countryFlag(country) {
+  return COUNTRY_CODES[String(country || "").trim().toLowerCase()] || ""
+}
+
+function countryCode(country) {
+  return countryFlag(country)
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
+    raceDateText: raceDateText,
+    upcomingRaces: upcomingRaces,
+    countryFlag: countryFlag,
+    countryCode: countryCode,
     teamHue: teamHue,
     clean: clean,
     parseSchedule: parseSchedule,

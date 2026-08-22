@@ -294,3 +294,47 @@ test("leaderAcronym reads the front of the field", () => {
   assert.equal(Model.leaderAcronym(rows), rows[0].acronym)
   assert.equal(Model.leaderAcronym([]), "")
 })
+
+// ------------------------------------------------------------ country codes
+
+test("countryFlag returns FIA three-letter codes, never emoji", () => {
+  // Emoji flags were the first attempt and they are a trap: a flag is a pair of
+  // regional-indicator codepoints that only renders as a flag if the system has
+  // an emoji font. Without one every race becomes two empty boxes and the panel
+  // looks broken rather than plain. The rig demonstrated exactly that.
+  const cases = { Netherlands: "NED", Italy: "ITA", Spain: "ESP", UK: "GBR",
+                  "United Kingdom": "GBR", USA: "USA", Monaco: "MON",
+                  Azerbaijan: "AZE", UAE: "UAE" }
+  for (const [country, code] of Object.entries(cases)) {
+    assert.equal(Model.countryFlag(country), code, country)
+  }
+  for (const v of Object.values(cases)) {
+    assert.match(v, /^[A-Z]{3}$/, v)
+    assert.ok(v.codePointAt(0) < 128, "must be plain ASCII")
+  }
+})
+
+test("an unrecognised country renders nothing rather than a placeholder", () => {
+  for (const bad of ["Atlantis", "", null, undefined, "   "]) {
+    assert.equal(Model.countryFlag(bad), "")
+  }
+})
+
+test("upcomingRaces returns only rounds after the current one", () => {
+  const races = [{ round: 11 }, { round: 12 }, { round: 13 }, { round: 14 }, { round: 15 }]
+  assert.deepEqual(Model.upcomingRaces(races, 12, 3).map((r) => r.round), [13, 14, 15])
+  assert.deepEqual(Model.upcomingRaces(races, 15, 3), [], "season end must be empty")
+  assert.deepEqual(Model.upcomingRaces([], 1, 3), [])
+})
+
+test("raceDateText reads the race session, falling back to the first", () => {
+  const race = { sessions: [
+    { kind: "fp1", startMs: Date.parse("2026-09-04T10:00:00Z") },
+    { kind: "race", startMs: Date.parse("2026-09-06T13:00:00Z") }] }
+  assert.equal(Model.raceDateText(race, Date.now()), "Sep 6")
+  // Some rounds publish practice before the race slot is confirmed.
+  assert.equal(Model.raceDateText({ sessions: [
+    { kind: "fp1", startMs: Date.parse("2026-09-04T10:00:00Z") }] }, Date.now()), "Sep 4")
+  assert.equal(Model.raceDateText({ sessions: [] }, Date.now()), "")
+  assert.equal(Model.raceDateText(null, Date.now()), "")
+})
