@@ -11,6 +11,8 @@ leader, and both championship standings.
 
 ![Pit Wall preview](preview.png)
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U5S225PTME)
+
 ## Install
 
 ```bash
