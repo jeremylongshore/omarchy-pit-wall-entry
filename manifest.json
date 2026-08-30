@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "author": "Jeremy Longshore",
   "license": "MIT",
-  "description": "F1 race weekend widget for the Omarchy bar. Next-session countdown that flips to live timing while a session runs. Free, keyless data from jolpica and openf1.",
+  "description": "Pit Wall turns your Omarchy bar into a Formula 1 race-weekend command post. Between sessions it counts down to FP1, qualifying, sprint, or race start; once running it shows the leader, gaps, flags, safety-car state, and a live leaderboard. Open the panel for the full weekend in local time plus driver and constructor standings. It reads keyless Jolpica schedule and standings data every 15 minutes and OpenF1 every 20 seconds only during sessions. No account, token, telemetry, writes, or user data.",
   "kinds": [
     "bar-widget"
   ],
@@ -14,7 +14,7 @@
   },
   "barWidget": {
     "displayName": "Pit Wall",
-    "description": "Bar pill counts down to the next F1 session and goes live during one. The panel carries the weekend schedule in your local time, the live leaderboard with gaps, and both championship standings. Data comes free and keyless from jolpica (schedule, standings) and openf1 (live feed).",
+    "description": "Pit Wall turns your Omarchy bar into a Formula 1 race-weekend command post. Between sessions it counts down to FP1, qualifying, sprint, or race start; once running it shows the leader, gaps, flags, safety-car state, and a live leaderboard. Open the panel for the full weekend in local time plus driver and constructor standings. It reads keyless Jolpica schedule and standings data every 15 minutes and OpenF1 every 20 seconds only during sessions. No account, token, telemetry, writes, or user data.",
     "category": "Info",
     "aliases": [
       "f1",
