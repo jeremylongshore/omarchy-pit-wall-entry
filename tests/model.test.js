@@ -338,3 +338,196 @@ test("raceDateText reads the race session, falling back to the first", () => {
   assert.equal(Model.raceDateText({ sessions: [] }, Date.now()), "")
   assert.equal(Model.raceDateText(null, Date.now()), "")
 })
+
+test("teamHue gives every current livery family a distinct stable identity", () => {
+  const cases = {
+    Ferrari: 0.005, Mercedes: 0.46, McLaren: 0.065,
+    "Red Bull Racing": 0.66, "Racing Bulls": 0.60, "RB F1 Team": 0.60,
+    Williams: 0.56, "Aston Martin": 0.42, Alpine: 0.55, Haas: 0.02,
+    Sauber: 0.30, Audi: 0.30, Cadillac: 0.12
+  }
+  for (const [team, hue] of Object.entries(cases)) assert.equal(Model.teamHue(team), hue, team)
+  assert.equal(Model.teamHue(null), 0)
+  assert.equal(Model.teamHue("Andretti"), Model.teamHue("Andretti"))
+  assert.notEqual(Model.teamHue("Andretti"), Model.teamHue("Porsche"))
+})
+
+test("countryCode preserves the plain-ASCII countryFlag compatibility alias", () => {
+  assert.equal(Model.countryCode(" Netherlands "), "NED")
+  assert.equal(Model.countryCode("Unknown"), "")
+})
+
+test("parseStandings skips structurally invalid rows and fills documented fallbacks", () => {
+  const raw = JSON.stringify({ MRData: { StandingsTable: { StandingsLists: [{ DriverStandings: [
+    {},
+    { Driver: { driverId: "fallback-driver" }, Constructors: [], position: "", points: "", wins: "" }
+  ] }] } } })
+  assert.deepEqual(Model.parseStandings(raw, "DriverStandings"), [{
+    pos: 2, points: "0", wins: 0, name: "fallback-driver", code: "", team: ""
+  }])
+  assert.deepEqual(Model.parseStandings(raw, "MissingStandings"), [])
+})
+
+test("parseDrivers ignores missing numbers and supplies bounded identity fallbacks", () => {
+  assert.deepEqual(Model.parseDrivers("junk"), {})
+  assert.deepEqual(Model.parseDrivers("[]"), {})
+  const rows = Model.parseDrivers(JSON.stringify([
+    {}, { driver_number: null },
+    { driver_number: 44, team_name: null, broadcast_name: "Lewis Hamilton" },
+    { driver_number: 7, full_name: "Kimi Antonelli" }
+  ]))
+  assert.deepEqual(rows["44"], { acronym: "#44", team: "", name: "Lewis Hamilton" })
+  assert.deepEqual(rows["7"], { acronym: "#7", team: "", name: "Kimi Antonelli" })
+})
+
+test("parseSchedule drops empty weekends and maps sparse circuit metadata safely", () => {
+  const raw = JSON.stringify({ MRData: { RaceTable: { season: "2026", Races: [
+    { round: "bad", raceName: "No Sessions" },
+    { round: "2", raceName: "Sparse GP", FirstPractice: { date: "bad" },
+      date: "2026-03-08", Circuit: {} }
+  ] } } })
+  const schedule = Model.parseSchedule(raw)
+  assert.equal(schedule.races.length, 1)
+  assert.equal(schedule.races[0].round, 2)
+  assert.equal(schedule.races[0].circuit, "")
+  assert.equal(schedule.races[0].locality, "")
+  assert.equal(schedule.races[0].country, "")
+  assert.equal(schedule.races[0].sessions[0].kind, "race")
+})
+
+test("boardRows supports missing metadata and an unlimited result", () => {
+  const rows = Model.boardRows({
+    "8": { position: 2 }, "9": { position: 1 }
+  }, {}, null, 0)
+  assert.deepEqual(rows, [
+    { pos: 1, num: "9", acronym: "#9", team: "", gap: "LEADER" },
+    { pos: 2, num: "8", acronym: "#8", team: "", gap: "" }
+  ])
+  assert.deepEqual(Model.leaderboard(JSON.stringify([{ driver_number: 9, position: 1, date: "1" }]), {}, "[]", 0), [
+    { pos: 1, num: "9", acronym: "#9", team: "", gap: "LEADER" }
+  ])
+})
+
+test("pickLiveSession ignores invalid windows, exact end boundaries, and cancellation", () => {
+  const now = Date.parse("2026-01-01T12:00:00Z")
+  const rows = JSON.stringify([
+    { date_start: "bad", date_end: "bad" },
+    { date_start: "2026-01-01T11:00:00Z", date_end: "2026-01-01T13:00:00Z", is_cancelled: true },
+    { session_name: "Race", date_start: "2026-01-01T11:00:00Z", date_end: "2026-01-01T13:00:00Z" }
+  ])
+  assert.equal(Model.pickLiveSession(rows, now).session_name, "Race")
+  assert.equal(Model.pickLiveSession(rows, Date.parse("2026-01-01T13:00:00Z")), null)
+  assert.equal(Model.pickLiveSession("[]", now), null)
+})
+
+test("all session kinds pin label, short code, duration, and chronological sorting", () => {
+  const raw = JSON.stringify({ MRData: { RaceTable: { season: "2026", Races: [
+    {
+      round: "2", raceName: "Complete Weekend", date: "2026-04-05", time: "13:00:00Z",
+      FirstPractice: { date: "2026-04-03", time: "12:00:00Z" },
+      SecondPractice: { date: "2026-04-03", time: "16:00:00Z" },
+      ThirdPractice: { date: "2026-04-04", time: "10:00:00Z" },
+      SprintQualifying: { date: "2026-04-03", time: "08:00:00Z" },
+      Sprint: { date: "2026-04-04", time: "08:00:00Z" },
+      Qualifying: { date: "2026-04-04", time: "14:00:00Z" }
+    },
+    { round: "1", raceName: "Earlier Round", date: "2026-03-01", time: "13:00:00Z" }
+  ] } } })
+  const schedule = Model.parseSchedule(raw)
+  assert.deepEqual(schedule.races.map(r => r.round), [1, 2])
+  const sessions = schedule.races[1].sessions
+  assert.deepEqual(sessions.map(s => [s.kind, s.label, s.short, s.endMs - s.startMs]), [
+    ["sprintQualifying", "Sprint Qualifying", "SQ", 45 * 60000],
+    ["fp1", "Practice 1", "FP1", 60 * 60000],
+    ["fp2", "Practice 2", "FP2", 60 * 60000],
+    ["sprint", "Sprint", "SPRINT", 60 * 60000],
+    ["fp3", "Practice 3", "FP3", 60 * 60000],
+    ["qualifying", "Qualifying", "QUALI", 60 * 60000],
+    ["race", "Race", "RACE", 180 * 60000]
+  ])
+})
+
+test("country table pins every supported human spelling and FIA code", () => {
+  const countries = {
+    australia: "AUS", bahrain: "BRN", "saudi arabia": "SAU", japan: "JPN",
+    china: "CHN", usa: "USA", "united states": "USA", america: "USA",
+    italy: "ITA", monaco: "MON", canada: "CAN", spain: "ESP", austria: "AUT",
+    uk: "GBR", "united kingdom": "GBR", "great britain": "GBR", hungary: "HUN",
+    belgium: "BEL", netherlands: "NED", azerbaijan: "AZE", singapore: "SIN",
+    mexico: "MEX", brazil: "BRA", qatar: "QAT", uae: "UAE",
+    "united arab emirates": "UAE", france: "FRA", portugal: "POR", turkey: "TUR",
+    russia: "RUS", germany: "GER", malaysia: "MAS", vietnam: "VIE",
+    "south africa": "RSA", korea: "KOR", india: "IND", argentina: "ARG",
+    switzerland: "SUI", sweden: "SWE", morocco: "MAR"
+  }
+  for (const [country, code] of Object.entries(countries)) {
+    assert.equal(Model.countryFlag(country), code, country)
+    assert.equal(Model.countryCode(country.toUpperCase()), code, `${country} uppercase`)
+  }
+})
+
+test("currentOrNext honors exact window boundaries and earliest unsorted future", () => {
+  const session = (start, end, short) => ({ startMs: start, endMs: end, short })
+  const races = [
+    { name: "Later", sessions: [session(400, 500, "RACE")] },
+    { name: "Sooner", sessions: [session(200, 300, "FP1")] }
+  ]
+  assert.equal(Model.currentOrNext(races, 100).race.name, "Sooner")
+  assert.equal(Model.currentOrNext(races, 200).status, "live")
+  assert.equal(Model.currentOrNext(races, 299).status, "live")
+  assert.equal(Model.currentOrNext(races, 300).race.name, "Later")
+})
+
+test("parseStandings pins constructor fallbacks and exact row order", () => {
+  const raw = JSON.stringify({ MRData: { StandingsTable: { StandingsLists: [{ ConstructorStandings: [
+    { position: "2", points: "42", wins: "1", Constructor: { name: "Ferrari" } },
+    { position: "", points: null, wins: null, Constructor: { constructorId: "future-team" } }
+  ] }] } } })
+  assert.deepEqual(Model.parseStandings(raw, "ConstructorStandings"), [
+    { pos: 2, points: "42", wins: 1, name: "Ferrari", code: "", team: "" },
+    { pos: 2, points: "0", wins: 0, name: "future-team", code: "", team: "" }
+  ])
+})
+
+test("event folding keeps exact-date state and copies a null base safely", () => {
+  const older = { driver_number: 1, date: "1", position: 2 }
+  const equal = { driver_number: 1, date: "1", position: 9 }
+  const latest = Model.latestByDriver([older, equal])
+  assert.equal(latest["1"], older)
+  const merged = Model.mergeEvents(null, JSON.stringify([older, equal]))
+  assert.deepEqual(merged["1"], older)
+  assert.deepEqual(Model.mergeEvents(null, "[]"), {})
+})
+
+test("gapText prefixes plain string gaps once and preserves already-prefixed gaps", () => {
+  assert.equal(Model.gapText({ gap_to_leader: "2.500" }, false), "+2.500")
+  assert.equal(Model.gapText({ gap_to_leader: "+2.500" }, false), "+2.500")
+  assert.equal(Model.gapText({ gap_to_leader: "" }, false), "")
+})
+
+test("upcomingRaces defaults to three and handles null input", () => {
+  const races = [{ round: 2 }, { round: 3 }, { round: 4 }, { round: 5 }]
+  assert.deepEqual(Model.upcomingRaces(races, 1).map(r => r.round), [2, 3, 4])
+  assert.deepEqual(Model.upcomingRaces(null, 1), [])
+  assert.deepEqual(Model.upcomingRaces(races, 1, 1).map(r => r.round), [2])
+})
+
+test("countdown pins exact threshold and ten-minute padding boundaries", () => {
+  assert.equal(Model.countdown(30000), "now")
+  assert.equal(Model.countdown(31 * 1000), "01m")
+  assert.equal(Model.countdown(10 * 60000), "10m")
+  assert.equal(Model.countdown(70 * 60000), "1h 10m")
+})
+
+test("raceDateText pins every month abbreviation", () => {
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  for (let month = 0; month < 12; month++) {
+    const startMs = Date.UTC(2026, month, 15, 12)
+    assert.equal(Model.raceDateText({ sessions: [{ kind: "race", startMs }] }), `${months[month]} 15`)
+  }
+})
+
+test("unknown team hues pin the stable hash algorithm", () => {
+  assert.equal(Model.teamHue("Andretti"), 0.8861111111111111)
+  assert.equal(Model.teamHue("Porsche"), 0.26666666666666666)
+})

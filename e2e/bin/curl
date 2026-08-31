@@ -1,0 +1,131 @@
+#!/bin/sh
+# Deterministic Jolpica/OpenF1 command fixture for the isolated render rig.
+# The renderer prepends this directory only inside its throwaway HOME; normal
+# installs continue to execute the real curl command against the public APIs.
+set -eu
+
+url=""
+for argument do
+  url="$argument"
+done
+
+log_file="${XDG_RUNTIME_DIR:-/tmp}/pit-wall-fixture.log"
+
+iso_offset() {
+  date -u -d "@$(( $(date -u +%s) + $1 ))" +%Y-%m-%dT%H:%M:%SZ
+}
+
+date_offset() {
+  iso_offset "$1" | cut -c1-10
+}
+
+time_offset() {
+  iso_offset "$1" | cut -c12-20
+}
+
+case "$url" in
+  https://api.jolpi.ca/ergast/f1/current.json\?*)
+    printf '%s\n' schedule >> "$log_file"
+    race_date="$(date_offset -1800)"
+    race_time="$(time_offset -1800)"
+    fp1_date="$(date_offset -172800)"
+    fp2_date="$(date_offset -151200)"
+    fp3_date="$(date_offset -86400)"
+    quali_date="$(date_offset -64800)"
+    next_date="$(date_offset 604800)"
+    later_date="$(date_offset 1209600)"
+    printf '%s\n' "{
+      \"MRData\": {\"RaceTable\": {\"season\": \"2026\", \"Races\": [
+        {
+          \"round\": \"14\", \"raceName\": \"Belgian Grand Prix\",
+          \"Circuit\": {\"circuitName\": \"Circuit de Spa-Francorchamps\", \"Location\": {\"locality\": \"Spa\", \"country\": \"Belgium\"}},
+          \"FirstPractice\": {\"date\": \"$fp1_date\", \"time\": \"10:30:00Z\"},
+          \"SecondPractice\": {\"date\": \"$fp2_date\", \"time\": \"14:00:00Z\"},
+          \"ThirdPractice\": {\"date\": \"$fp3_date\", \"time\": \"10:30:00Z\"},
+          \"Qualifying\": {\"date\": \"$quali_date\", \"time\": \"14:00:00Z\"},
+          \"date\": \"$race_date\", \"time\": \"$race_time\"
+        },
+        {
+          \"round\": \"15\", \"raceName\": \"Dutch Grand Prix\",
+          \"Circuit\": {\"circuitName\": \"Circuit Zandvoort\", \"Location\": {\"locality\": \"Zandvoort\", \"country\": \"Netherlands\"}},
+          \"date\": \"$next_date\", \"time\": \"13:00:00Z\"
+        },
+        {
+          \"round\": \"16\", \"raceName\": \"Italian Grand Prix\",
+          \"Circuit\": {\"circuitName\": \"Autodromo Nazionale Monza\", \"Location\": {\"locality\": \"Monza\", \"country\": \"Italy\"}},
+          \"date\": \"$later_date\", \"time\": \"13:00:00Z\"
+        }
+      ]}}
+    }"
+    ;;
+  https://api.jolpi.ca/ergast/f1/current/driverstandings.json)
+    printf '%s\n' driver-standings >> "$log_file"
+    printf '%s\n' '{"MRData":{"StandingsTable":{"StandingsLists":[{"DriverStandings":[
+      {"position":"1","points":"278","wins":"7","Driver":{"familyName":"Norris","code":"NOR"},"Constructors":[{"name":"McLaren"}]},
+      {"position":"2","points":"266","wins":"6","Driver":{"familyName":"Verstappen","code":"VER"},"Constructors":[{"name":"Red Bull"}]},
+      {"position":"3","points":"224","wins":"3","Driver":{"familyName":"Leclerc","code":"LEC"},"Constructors":[{"name":"Ferrari"}]},
+      {"position":"4","points":"196","wins":"2","Driver":{"familyName":"Piastri","code":"PIA"},"Constructors":[{"name":"McLaren"}]},
+      {"position":"5","points":"181","wins":"1","Driver":{"familyName":"Russell","code":"RUS"},"Constructors":[{"name":"Mercedes"}]}
+    ]}]}}}'
+    ;;
+  https://api.jolpi.ca/ergast/f1/current/constructorstandings.json)
+    printf '%s\n' constructor-standings >> "$log_file"
+    printf '%s\n' '{"MRData":{"StandingsTable":{"StandingsLists":[{"ConstructorStandings":[
+      {"position":"1","points":"474","wins":"9","Constructor":{"name":"McLaren"}},
+      {"position":"2","points":"385","wins":"6","Constructor":{"name":"Ferrari"}},
+      {"position":"3","points":"341","wins":"6","Constructor":{"name":"Red Bull"}},
+      {"position":"4","points":"299","wins":"2","Constructor":{"name":"Mercedes"}},
+      {"position":"5","points":"104","wins":"0","Constructor":{"name":"Aston Martin"}}
+    ]}]}}}'
+    ;;
+  https://api.openf1.org/v1/drivers\?*)
+    printf '%s\n' drivers >> "$log_file"
+    printf '%s\n' '[
+      {"driver_number":1,"name_acronym":"NOR","team_name":"McLaren","full_name":"Lando Norris"},
+      {"driver_number":3,"name_acronym":"VER","team_name":"Red Bull","full_name":"Max Verstappen"},
+      {"driver_number":16,"name_acronym":"LEC","team_name":"Ferrari","full_name":"Charles Leclerc"},
+      {"driver_number":81,"name_acronym":"PIA","team_name":"McLaren","full_name":"Oscar Piastri"},
+      {"driver_number":63,"name_acronym":"RUS","team_name":"Mercedes","full_name":"George Russell"},
+      {"driver_number":44,"name_acronym":"HAM","team_name":"Ferrari","full_name":"Lewis Hamilton"}
+    ]'
+    ;;
+  https://api.openf1.org/v1/sessions\?*)
+    printf '%s\n' session >> "$log_file"
+    session_start="$(iso_offset -1800)"
+    session_end="$(iso_offset 7200)"
+    printf '%s\n' "[{\"session_key\":99001,\"session_type\":\"Race\",\"session_name\":\"Race\",\"date_start\":\"$session_start\",\"date_end\":\"$session_end\",\"is_cancelled\":false}]"
+    ;;
+  https://api.openf1.org/v1/position\?*)
+    printf '%s\n' position >> "$log_file"
+    printf '%s\n' '[
+      {"driver_number":3,"position":1,"date":"2026-08-30T18:41:06Z"},
+      {"driver_number":1,"position":2,"date":"2026-08-30T18:41:07Z"},
+      {"driver_number":16,"position":3,"date":"2026-08-30T18:41:08Z"},
+      {"driver_number":81,"position":4,"date":"2026-08-30T18:41:09Z"},
+      {"driver_number":63,"position":5,"date":"2026-08-30T18:41:10Z"},
+      {"driver_number":44,"position":6,"date":"2026-08-30T18:41:11Z"}
+    ]'
+    ;;
+  https://api.openf1.org/v1/intervals\?*)
+    printf '%s\n' intervals >> "$log_file"
+    printf '%s\n' '[
+      {"driver_number":3,"gap_to_leader":0,"date":"2026-08-30T18:41:06Z"},
+      {"driver_number":1,"gap_to_leader":1.842,"date":"2026-08-30T18:41:07Z"},
+      {"driver_number":16,"gap_to_leader":4.116,"date":"2026-08-30T18:41:08Z"},
+      {"driver_number":81,"gap_to_leader":7.903,"date":"2026-08-30T18:41:09Z"},
+      {"driver_number":63,"gap_to_leader":11.274,"date":"2026-08-30T18:41:10Z"},
+      {"driver_number":44,"gap_to_leader":15.608,"date":"2026-08-30T18:41:11Z"}
+    ]'
+    ;;
+  https://api.openf1.org/v1/race_control\?*)
+    printf '%s\n' race-control >> "$log_file"
+    printf '%s\n' '[
+      {"date":"2026-08-30T18:35:00Z","category":"Flag","flag":"GREEN","scope":"Track","message":"TRACK CLEAR"},
+      {"date":"2026-08-30T18:40:00Z","category":"SafetyCar","scope":"Track","message":"SAFETY CAR DEPLOYED"}
+    ]'
+    ;;
+  *)
+    printf 'pit-wall fixture: refused unrecognized URL: %s\n' "$url" >&2
+    exit 22
+    ;;
+esac
