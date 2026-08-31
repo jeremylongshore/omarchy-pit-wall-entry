@@ -14,8 +14,8 @@ test("marketplace copy uses all 500 characters for the shipped F1 story", () => 
   assert.equal(manifest.description, manifest.barWidget.description)
   for (const claim of [
     "race-weekend command post", "counts down", "leader, gaps, flags",
-    "local time", "driver and constructor standings", "every 15 minutes",
-    "every 20 seconds", "No account, token, telemetry, writes, or user data"
+    "local-time weekend schedule", "driver/constructor standings", "every 15 minutes",
+    "every 20 seconds", "writes no files outside Quickshell's own state handling"
   ]) assert.match(manifest.description, new RegExp(claim))
 })
 

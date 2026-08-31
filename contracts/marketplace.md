@@ -10,6 +10,6 @@ the same product promise.
 - `preview.png` is accepted only with current-tree Buzz provenance, exact
   1280x720 dimensions, a clean shell-log hash, and explicit visual approval.
 - Network traffic consists of bounded, read-only, keyless Jolpica and OpenF1
-  requests. The plugin has no account, token, telemetry, or write path.
+  requests. The plugin writes no files outside Quickshell's own state handling.
 
 `tests/contract.test.js` and gate C43 enforce the machine-checkable portions.
