@@ -2,6 +2,12 @@
 
 # Pit Wall
 
+<!-- intent-select-partner:start -->
+<p><a href="https://intentsolutions.io/"><img src="https://raw.githubusercontent.com/intent-solutions-io/.github/b82af5d3e7951d85e39ea9e65cc24ee8278722a7/assets/brand/claude-select-partner.svg" alt="Intent Solutions: Claude Partner Network Select Services Partner" width="300" height="95" /></a></p>
+
+Intent Solutions is a Claude Partner Network Select Services Partner.
+<!-- intent-select-partner:end -->
+
 The next F1 session, counted down in your Omarchy bar. Live timing from the moment it starts.
 
 A bar pill counts down to the next Formula 1 session, `QUALI 2h 14m`, then flips to live timing
