@@ -2,6 +2,9 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Commons
+// Qt 6.12 adds its own Color type, so Omarchy's palette singleton must be
+// qualified (docs/omarchy-shell.md, Theme tokens).
+import qs.Commons as Commons
 import qs.Ui
 import "Model.js" as Model
 
@@ -392,7 +395,7 @@ Panel {
                 // heroCol is anchored left and right, so its width is the frame.
                 width: heroCol.width
                 elide: Text.ElideRight
-                color: root.bar ? root.bar.foreground : Color.foreground
+                color: root.bar ? root.bar.foreground : Commons.Color.foreground
                 font.family: root.bar ? root.bar.fontFamily : Style.font.family
                 font.pixelSize: Style.font.title
                 font.bold: true
@@ -414,7 +417,7 @@ Panel {
                 textFormat: Text.PlainText
                 width: heroCol.width
                 elide: Text.ElideRight
-                color: root.bar ? Qt.darker(root.bar.foreground, 1.4) : Color.muted
+                color: root.bar ? Qt.darker(root.bar.foreground, 1.4) : Commons.Color.muted
                 font.family: root.bar ? root.bar.fontFamily : Style.font.family
                 font.pixelSize: Style.font.caption
                 font.letterSpacing: 1
@@ -430,7 +433,7 @@ Panel {
                   height: liveText.implicitHeight + Style.space(4)
                   anchors.verticalCenter: parent.verticalCenter
                   radius: Style.cornerRadius
-                  color: root.bar ? root.bar.urgent : Color.urgent
+                  color: root.bar ? root.bar.urgent : Commons.Color.urgent
 
                   Text {
                     id: liveText
@@ -439,7 +442,7 @@ Panel {
                     textFormat: Text.PlainText
                     width: Math.min(implicitWidth, heroCol.width - Style.space(12))
                     elide: Text.ElideRight
-                    color: root.bar ? root.bar.background : Color.background
+                    color: root.bar ? root.bar.background : Commons.Color.background
                     font.family: root.bar ? root.bar.fontFamily : Style.font.family
                     font.pixelSize: Style.font.caption
                     font.bold: true
@@ -453,7 +456,7 @@ Panel {
                   textFormat: Text.PlainText
                   width: Math.min(implicitWidth, heroCol.width)
                   elide: Text.ElideRight
-                  color: root.bar ? root.bar.foreground : Color.foreground
+                  color: root.bar ? root.bar.foreground : Commons.Color.foreground
                   font.family: root.bar ? root.bar.fontFamily : Style.font.family
                   font.pixelSize: Style.font.display
                   // Live is the urgent state, so it carries the bold weight
@@ -471,12 +474,12 @@ Panel {
             width: parent.width
             spacing: Style.space(2)
 
-            PanelSeparator { foreground: root.bar ? root.bar.foreground : Color.foreground }
+            PanelSeparator { foreground: root.bar ? root.bar.foreground : Commons.Color.foreground }
 
             PanelSectionHeader {
               text: "LIVE TIMING"
               leftPadding: Style.space(16)
-              foreground: root.bar ? root.bar.foreground : Color.foreground
+              foreground: root.bar ? root.bar.foreground : Commons.Color.foreground
               fontFamily: root.bar ? root.bar.fontFamily : Style.font.family
             }
 
@@ -496,7 +499,7 @@ Panel {
                   elide: Text.ElideRight
                   text: "P" + modelData.pos
                   textFormat: Text.PlainText
-                  color: root.bar ? Qt.darker(root.bar.foreground, 1.4) : Color.muted
+                  color: root.bar ? Qt.darker(root.bar.foreground, 1.4) : Commons.Color.muted
                   font.family: root.bar ? root.bar.fontFamily : Style.font.family
                   font.pixelSize: Style.font.body
                 }
@@ -509,7 +512,7 @@ Panel {
                   elide: Text.ElideRight
                   text: modelData.acronym
                   textFormat: Text.PlainText
-                  color: root.bar ? root.bar.foreground : Color.foreground
+                  color: root.bar ? root.bar.foreground : Commons.Color.foreground
                   font.family: root.bar ? root.bar.fontFamily : Style.font.family
                   font.pixelSize: Style.font.body
                   font.bold: modelData.pos === 1
@@ -521,7 +524,7 @@ Panel {
                   anchors.verticalCenter: parent.verticalCenter
                   text: modelData.team
                   textFormat: Text.PlainText
-                  color: root.bar ? Qt.darker(root.bar.foreground, 1.4) : Color.muted
+                  color: root.bar ? Qt.darker(root.bar.foreground, 1.4) : Commons.Color.muted
                   font.family: root.bar ? root.bar.fontFamily : Style.font.family
                   font.pixelSize: Style.font.bodySmall
                   elide: Text.ElideRight
@@ -536,7 +539,7 @@ Panel {
                   elide: Text.ElideRight
                   text: modelData.gap
                   textFormat: Text.PlainText
-                  color: root.bar ? Qt.darker(root.bar.foreground, modelData.pos === 1 ? 1.0 : 1.3) : Color.foreground
+                  color: root.bar ? Qt.darker(root.bar.foreground, modelData.pos === 1 ? 1.0 : 1.3) : Commons.Color.foreground
                   font.family: root.bar ? root.bar.fontFamily : Style.font.family
                   font.pixelSize: Style.font.bodySmall
                 }
@@ -550,12 +553,12 @@ Panel {
             width: parent.width
             spacing: Style.space(2)
 
-            PanelSeparator { foreground: root.bar ? root.bar.foreground : Color.foreground }
+            PanelSeparator { foreground: root.bar ? root.bar.foreground : Commons.Color.foreground }
 
             PanelSectionHeader {
               text: "WEEKEND · LOCAL TIME"
               leftPadding: Style.space(16)
-              foreground: root.bar ? root.bar.foreground : Color.foreground
+              foreground: root.bar ? root.bar.foreground : Commons.Color.foreground
               fontFamily: root.bar ? root.bar.fontFamily : Style.font.family
             }
 
@@ -578,8 +581,8 @@ Panel {
                   text: modelData.label
                   textFormat: Text.PlainText
                   color: {
-                    var fg = root.bar ? root.bar.foreground : Color.foreground
-                    if (isNow) return root.bar ? root.bar.urgent : Color.urgent
+                    var fg = root.bar ? root.bar.foreground : Commons.Color.foreground
+                    if (isNow) return root.bar ? root.bar.urgent : Commons.Color.urgent
                     return isPast ? Qt.darker(fg, 1.6) : fg
                   }
                   font.family: root.bar ? root.bar.fontFamily : Style.font.family
@@ -596,8 +599,8 @@ Panel {
                   text: isNow ? "IN PROGRESS" : Qt.formatDateTime(new Date(modelData.startMs), "ddd HH:mm")
                   textFormat: Text.PlainText
                   color: {
-                    var fg = root.bar ? root.bar.foreground : Color.foreground
-                    if (isNow) return root.bar ? root.bar.urgent : Color.urgent
+                    var fg = root.bar ? root.bar.foreground : Commons.Color.foreground
+                    if (isNow) return root.bar ? root.bar.urgent : Commons.Color.urgent
                     return isPast ? Qt.darker(fg, 1.6) : Qt.darker(fg, 1.3)
                   }
                   font.family: root.bar ? root.bar.fontFamily : Style.font.family
@@ -622,7 +625,7 @@ Panel {
               width: nextCol.width - Style.space(32)
               x: Style.space(16)
               elide: Text.ElideRight
-              color: root.bar ? Qt.darker(root.bar.foreground, 1.5) : Color.muted
+              color: root.bar ? Qt.darker(root.bar.foreground, 1.5) : Commons.Color.muted
               font.family: root.bar ? root.bar.fontFamily : Style.font.family
               font.pixelSize: Style.font.caption
               font.bold: true
@@ -648,7 +651,7 @@ Panel {
                          + (Model.countryFlag(modelData.country) ? "  " : ""))
                         + "R" + modelData.round + "  " + modelData.name
                   textFormat: Text.PlainText
-                  color: root.bar ? Qt.darker(root.bar.foreground, 1.25) : Color.foreground
+                  color: root.bar ? Qt.darker(root.bar.foreground, 1.25) : Commons.Color.foreground
                   font.family: root.bar ? root.bar.fontFamily : Style.font.family
                   font.pixelSize: Style.font.bodySmall
                 }
@@ -662,7 +665,7 @@ Panel {
                   elide: Text.ElideRight
                   text: Model.raceDateText(modelData, root.nowMs)
                   textFormat: Text.PlainText
-                  color: root.bar ? Qt.darker(root.bar.foreground, 1.7) : Color.muted
+                  color: root.bar ? Qt.darker(root.bar.foreground, 1.7) : Commons.Color.muted
                   font.family: root.bar ? root.bar.fontFamily : Style.font.family
                   font.pixelSize: Style.font.bodySmall
                 }
@@ -676,12 +679,12 @@ Panel {
             width: parent.width
             spacing: Style.space(2)
 
-            PanelSeparator { foreground: root.bar ? root.bar.foreground : Color.foreground }
+            PanelSeparator { foreground: root.bar ? root.bar.foreground : Commons.Color.foreground }
 
             PanelSectionHeader {
               text: "CHAMPIONSHIP"
               leftPadding: Style.space(16)
-              foreground: root.bar ? root.bar.foreground : Color.foreground
+              foreground: root.bar ? root.bar.foreground : Commons.Color.foreground
               fontFamily: root.bar ? root.bar.fontFamily : Style.font.family
             }
 
@@ -728,7 +731,7 @@ Panel {
                       elide: Text.ElideRight
                       text: modelData.pos + "  " + (modelData.code || modelData.name)
                       textFormat: Text.PlainText
-                      color: root.bar ? root.bar.foreground : Color.foreground
+                      color: root.bar ? root.bar.foreground : Commons.Color.foreground
                       font.family: root.bar ? root.bar.fontFamily : Style.font.family
                       font.pixelSize: Style.font.bodySmall
                     }
@@ -741,7 +744,7 @@ Panel {
                       elide: Text.ElideRight
                       text: modelData.points
                       textFormat: Text.PlainText
-                      color: root.bar ? Qt.darker(root.bar.foreground, 1.3) : Color.muted
+                      color: root.bar ? Qt.darker(root.bar.foreground, 1.3) : Commons.Color.muted
                       font.family: root.bar ? root.bar.fontFamily : Style.font.family
                       font.pixelSize: Style.font.bodySmall
                     }
@@ -757,7 +760,7 @@ Panel {
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 width: Style.spacing.hairline
-                color: root.bar ? root.bar.foreground : Color.foreground
+                color: root.bar ? root.bar.foreground : Commons.Color.foreground
                 opacity: 0.12
               }
 
@@ -793,7 +796,7 @@ Panel {
                       anchors.verticalCenter: parent.verticalCenter
                       text: modelData.pos + "  " + modelData.name
                       textFormat: Text.PlainText
-                      color: root.bar ? root.bar.foreground : Color.foreground
+                      color: root.bar ? root.bar.foreground : Commons.Color.foreground
                       font.family: root.bar ? root.bar.fontFamily : Style.font.family
                       font.pixelSize: Style.font.bodySmall
                       elide: Text.ElideRight
@@ -808,7 +811,7 @@ Panel {
                       elide: Text.ElideRight
                       text: modelData.points
                       textFormat: Text.PlainText
-                      color: root.bar ? Qt.darker(root.bar.foreground, 1.3) : Color.muted
+                      color: root.bar ? Qt.darker(root.bar.foreground, 1.3) : Commons.Color.muted
                       font.family: root.bar ? root.bar.fontFamily : Style.font.family
                       font.pixelSize: Style.font.bodySmall
                     }
@@ -838,7 +841,7 @@ Panel {
               text: root.sourceLine
               textFormat: Text.PlainText
               elide: Text.ElideRight
-              color: root.bar ? Qt.darker(root.bar.foreground, 1.8) : Color.muted
+              color: root.bar ? Qt.darker(root.bar.foreground, 1.8) : Commons.Color.muted
               font.family: root.bar ? root.bar.fontFamily : Style.font.family
               font.pixelSize: Style.font.caption
               font.letterSpacing: 1
