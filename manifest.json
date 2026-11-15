@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.jeremylongshore.pit-wall",
   "name": "Pit Wall",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Jeremy Longshore",
   "license": "MIT",
   "description": "Pit Wall turns your Omarchy bar into a Formula 1 race-weekend command post. Between sessions it counts down to FP1, qualifying, sprint, or race start; while running it shows the leader, gaps, flags, safety-car state, and live leaderboard. Open the panel for the local-time weekend schedule plus driver/constructor standings. It reads keyless Jolpica schedule/standings data every 15 minutes and OpenF1 every 20 seconds only during sessions. It writes no files outside Quickshell's own state handling.",
